@@ -148,37 +148,39 @@ class FuelMap(RawGeoFMDataset):
         data = {}
         metadata = None  # será un tensor 1D con las fechas de S2 seleccionadas
 
+        
         for modality in self.modalities:
             path = os.path.join(self.root_path, f"DATA_{modality}", f"{name}.npy")
             array = np.load(path)
 
             if array.ndim == 4:
                 # Datos multitemporales: (T, C, H, W)
+                total_frames = array.shape[0]
+                max_steps = min(35, total_frames)
+                base_indexes = torch.linspace(0, total_frames - 1, steps=max_steps, dtype=torch.long)
+                final_indexes = temporal_subsampling(self.multi_temporal, base_indexes)
+
+                tensor = torch.from_numpy(array).to(torch.float32)[final_indexes]
+                tensor = rearrange(tensor, "t c h w -> c t h w")
+
+
                 if modality == "S2":
                     all_dates = self.get_dates(id_patch, modality).to(torch.float32)
-                    total_frames = array.shape[0]
-                    base_indexes = torch.linspace(0, total_frames - 1, steps=35, dtype=torch.long)
+                    total_frames = all_dates.shape[0]
+                    max_steps = min(35, total_frames)
+                    base_indexes = torch.linspace(0, total_frames - 1, steps=max_steps, dtype=torch.long)
                     final_indexes = temporal_subsampling(self.multi_temporal, base_indexes)
-                    tensor = torch.from_numpy(array).to(torch.float32)[final_indexes]
-
+                    metadata = all_dates[final_indexes]
                     
-                    metadata = self.get_dates(id_patch, modality)
-                    # filter by indexes
-                    metadata = metadata[final_indexes]
-                else:
-                    indexes = torch.linspace(0, array.shape[0] - 1, self.multi_temporal, dtype=torch.long)
-                    tensor = torch.from_numpy(array).to(torch.float32)[indexes]
-
-                tensor = rearrange(tensor, "t c h w -> c t h w")
+                    
 
             elif array.ndim == 2:
                 # Estático monocanal: (H, W)
-                tensor = torch.from_numpy(array).to(torch.float32).unsqueeze(0).unsqueeze(1)  # (1, 1, H, W)
-                tensor = tensor.repeat(1, self.multi_temporal, 1, 1)  # → (1, T, H, W)
+                tensor = torch.from_numpy(array).to(torch.float32).unsqueeze(0).unsqueeze(1)
+                tensor = tensor.repeat(1, self.multi_temporal, 1, 1)
 
             else:
                 raise ValueError(f"Unsupported array shape {array.shape} for modality {modality}")
-
             data[modality] = tensor
 
         if self.obj == "class":
