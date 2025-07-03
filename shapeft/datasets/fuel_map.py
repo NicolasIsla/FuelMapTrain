@@ -169,8 +169,14 @@ class FuelMap(RawGeoFMDataset):
             # Mantener cada modalidad por separado como antes
             data[modality] = tensor
 
-            if modality in ["S2", "S1_asc", "S1_des"]:
+            # Agregar metadatos temporales reales
+            for modality in ["S2", "S1_asc", "S1_des"]:
                 metadata[modality] = self.get_dates(id_patch, modality)
+
+            # Agregar metadatos estáticos como ceros
+            dummy_meta = torch.zeros(self.multi_temporal, dtype=torch.int32)
+            for modality in ["elevation", "mTPI", "landforms"]:
+                metadata[modality] = dummy_meta
 
         if self.obj == "class":
             return {
