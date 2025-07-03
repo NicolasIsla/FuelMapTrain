@@ -141,6 +141,7 @@ class FuelMap(RawGeoFMDataset):
         id_patch = self.id_patches[i]
         name = line["id"]
 
+        # Cargar etiqueta
         target = torch.from_numpy(
             np.load(os.path.join(self.root_path, f"ANNOTATIONS_{self.obj}", f"{name}.npy"))
         )
@@ -148,15 +149,18 @@ class FuelMap(RawGeoFMDataset):
         data = {}
         metadata = {}
 
+        # Cargar todas las modalidades
         for modality in self.modalities:
             path = os.path.join(self.root_path, f"DATA_{modality}", f"{name}.npy")
             array = np.load(path)
 
             if array.ndim == 4:
+                # Datos multitemporales
                 indexes = torch.linspace(0, array.shape[0] - 1, self.multi_temporal, dtype=torch.long)
                 tensor = torch.from_numpy(array).to(torch.float32)[indexes]
                 tensor = rearrange(tensor, "t c h w -> c t h w")
             else:
+                # Datos estáticos
                 tensor = torch.from_numpy(array).to(torch.float32)
 
             if modality.startswith("S2"):
@@ -171,15 +175,28 @@ class FuelMap(RawGeoFMDataset):
             if modality in ["S2", "S1_asc", "S1_des"]:
                 metadata[modality] = self.get_dates(id_patch, modality)
 
+        # Concatenar todas las modalidades en un único tensor (C, T, H, W)
+        modalities = []
+        for key in ["optical", "sar_asc", "sar_desc", "elevation", "mTPI", "landforms"]:
+            if key in data:
+                x = data[key]
+                if x.ndim == 3:
+                    x = x.unsqueeze(1)  # (C, H, W) → (C, 1, H, W)
+                elif x.ndim == 2:
+                    x = x.unsqueeze(0).unsqueeze(1)  # (H, W) → (1, 1, H, W)
+                modalities.append(x)
+
+        image = torch.cat(modalities, dim=0)  # (C_total, T, H, W)
+
         if self.obj == "class":
             return {
-                "image": data,
+                "image": image,
                 "target": target.to(torch.int64),
                 "metadata": metadata
             }
         else:
             return {
-                "image": data,
+                "image": image,
                 "target": target.to(torch.float32),
                 "metadata": metadata
             }
