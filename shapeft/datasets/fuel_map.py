@@ -149,7 +149,7 @@ class FuelMap(RawGeoFMDataset):
         metadata = {}
 
         for modality in self.modalities:
-            path = os.path.join(self.root_path, f"DATA_{modality.upper()}", f"{name}.npy")
+            path = os.path.join(self.root_path, f"DATA_{modality}", f"{name}.npy")
             array = np.load(path)
 
             if array.ndim == 4:
