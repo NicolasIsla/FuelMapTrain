@@ -153,11 +153,18 @@ class FuelMap(RawGeoFMDataset):
             array = np.load(path)
 
             if array.ndim == 4:
+                # Datos multitemporales: (T, C, H, W)
                 indexes = torch.linspace(0, array.shape[0] - 1, self.multi_temporal, dtype=torch.long)
                 tensor = torch.from_numpy(array).to(torch.float32)[indexes]
                 tensor = rearrange(tensor, "t c h w -> c t h w")
+
+            elif array.ndim == 2:
+                # Estático monocanal: (H, W)
+                tensor = torch.from_numpy(array).to(torch.float32).unsqueeze(0).unsqueeze(1)  # (1, 1, H, W)
+                tensor = tensor.repeat(1, self.multi_temporal, 1, 1)  # → (1, T, H, W)
+
             else:
-                tensor = torch.from_numpy(array).to(torch.float32)
+                raise ValueError(f"Unsupported array shape {array.shape} for modality {modality}")
 
             # Mantener cada modalidad por separado como antes
             data[modality] = tensor
