@@ -174,7 +174,15 @@ class FuelMap(RawGeoFMDataset):
 
         if self.obj == "class":
             return {
-                "image": data,  # <== Diccionario como antes
+                "image": {
+                    "optical": data["S2"],
+                    "sar_asc": data["S1_asc"],
+                    "sar_desc": data["S1_des"],
+                    "elevation": data["elevation"],
+                    "mTPI": data["mTPI"],
+                    "landforms": data["landforms"]
+
+                },
                 "target": target.to(torch.int64),
                 "metadata": metadata
             }
