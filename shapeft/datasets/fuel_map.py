@@ -136,7 +136,7 @@ class FuelMap(RawGeoFMDataset):
         return torch.tensor(self.date_range[indices], dtype=torch.int32)
 
     
-    def __getitem__(self, i: int) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]]]:
+    def __getitem__(self, i: int) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor, torch.Tensor]]:
         line = self.meta_patch.iloc[i]
         id_patch = self.id_patches[i]
         name = line["id"]
@@ -146,7 +146,7 @@ class FuelMap(RawGeoFMDataset):
         )
 
         data = {}
-        metadata = {}
+        metadata = None  # será un tensor 1D con las fechas de S2 seleccionadas
 
         for modality in self.modalities:
             path = os.path.join(self.root_path, f"DATA_{modality}", f"{name}.npy")
@@ -154,8 +154,21 @@ class FuelMap(RawGeoFMDataset):
 
             if array.ndim == 4:
                 # Datos multitemporales: (T, C, H, W)
-                indexes = torch.linspace(0, array.shape[0] - 1, self.multi_temporal, dtype=torch.long)
-                tensor = torch.from_numpy(array).to(torch.float32)[indexes]
+                if modality == "S2":
+                    all_dates = self.get_dates(id_patch, modality).to(torch.float32)
+                    total_frames = array.shape[0]
+                    base_indexes = torch.linspace(0, total_frames - 1, steps=35, dtype=torch.long)
+                    final_indexes = temporal_subsampling(self.multi_temporal, base_indexes)
+                    tensor = torch.from_numpy(array).to(torch.float32)[final_indexes]
+
+                    
+                    metadata = self.get_dates(id_patch, modality)
+                    # filter by indexes
+                    metadata = metadata[final_indexes]
+                else:
+                    indexes = torch.linspace(0, array.shape[0] - 1, self.multi_temporal, dtype=torch.long)
+                    tensor = torch.from_numpy(array).to(torch.float32)[indexes]
+
                 tensor = rearrange(tensor, "t c h w -> c t h w")
 
             elif array.ndim == 2:
@@ -166,17 +179,7 @@ class FuelMap(RawGeoFMDataset):
             else:
                 raise ValueError(f"Unsupported array shape {array.shape} for modality {modality}")
 
-            # Mantener cada modalidad por separado como antes
             data[modality] = tensor
-
-            # Agregar metadatos temporales reales
-            for modality in ["S2", "S1_asc", "S1_des"]:
-                metadata[modality] = self.get_dates(id_patch, modality)
-
-            # Agregar metadatos estáticos como ceros
-            dummy_meta = torch.zeros(self.multi_temporal, dtype=torch.int32)
-            for modality in ["elevation", "mTPI", "landforms"]:
-                metadata[modality] = dummy_meta
 
         if self.obj == "class":
             return {
@@ -187,10 +190,9 @@ class FuelMap(RawGeoFMDataset):
                     "elevation": data["elevation"],
                     "mTPI": data["mTPI"],
                     "landforms": data["landforms"]
-
                 },
                 "target": target.to(torch.int64),
-                "metadata": metadata
+                "metadata": metadata  # solo fechas de S2
             }
         else:
             return {
