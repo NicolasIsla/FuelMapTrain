@@ -136,12 +136,11 @@ class FuelMap(RawGeoFMDataset):
         return torch.tensor(self.date_range[indices], dtype=torch.int32)
 
     
-    def __getitem__(self, i: int) -> Dict[str, Union[torch.Tensor, Dict[str, torch.Tensor]]]:
+    def __getitem__(self, i: int) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]]]:
         line = self.meta_patch.iloc[i]
         id_patch = self.id_patches[i]
         name = line["id"]
 
-        # Cargar etiqueta
         target = torch.from_numpy(
             np.load(os.path.join(self.root_path, f"ANNOTATIONS_{self.obj}", f"{name}.npy"))
         )
@@ -149,58 +148,35 @@ class FuelMap(RawGeoFMDataset):
         data = {}
         metadata = {}
 
-        # Cargar todas las modalidades
         for modality in self.modalities:
             path = os.path.join(self.root_path, f"DATA_{modality}", f"{name}.npy")
             array = np.load(path)
 
             if array.ndim == 4:
-                # Datos multitemporales
                 indexes = torch.linspace(0, array.shape[0] - 1, self.multi_temporal, dtype=torch.long)
                 tensor = torch.from_numpy(array).to(torch.float32)[indexes]
                 tensor = rearrange(tensor, "t c h w -> c t h w")
             else:
-                # Datos estáticos
                 tensor = torch.from_numpy(array).to(torch.float32)
 
-            if modality.startswith("S2"):
-                data["optical"] = tensor
-            elif modality == "S1_asc":
-                data["sar_asc"] = tensor
-            elif modality == "S1_des":
-                data["sar_desc"] = tensor
-            else:
-                data[modality] = tensor
+            # Mantener cada modalidad por separado como antes
+            data[modality] = tensor
 
             if modality in ["S2", "S1_asc", "S1_des"]:
                 metadata[modality] = self.get_dates(id_patch, modality)
 
-        # Concatenar todas las modalidades en un único tensor (C, T, H, W)
-        modalities = []
-        for key in ["optical", "sar_asc", "sar_desc", "elevation", "mTPI", "landforms"]:
-            if key in data:
-                x = data[key]
-                if x.ndim == 3:
-                    x = x.unsqueeze(1)  # (C, H, W) → (C, 1, H, W)
-                elif x.ndim == 2:
-                    x = x.unsqueeze(0).unsqueeze(1)  # (H, W) → (1, 1, H, W)
-                modalities.append(x)
-
-        image = torch.cat(modalities, dim=0)  # (C_total, T, H, W)
-
         if self.obj == "class":
             return {
-                "image": image,
+                "image": data,  # <== Diccionario como antes
                 "target": target.to(torch.int64),
                 "metadata": metadata
             }
         else:
             return {
-                "image": image,
+                "image": data,
                 "target": target.to(torch.float32),
                 "metadata": metadata
             }
-
     @staticmethod
     def download():
         pass
