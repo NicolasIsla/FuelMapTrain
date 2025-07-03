@@ -44,7 +44,7 @@ class FuelMap(RawGeoFMDataset):
         data_max: dict[str, list[str]],
         download_url: str,
         auto_download: bool,
-        reference_date: str = "", 
+        reference_date: str = "2020-09-01", 
         cover=0,
         obj="class"
     ):
