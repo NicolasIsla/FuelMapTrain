@@ -1,4 +1,4 @@
-_target_: shapeft.datasets.fuelmap.FuelMap
+_target_: shapeft.datasets.fire2a.FuelMap
 dataset_name: FuelMap
 root_path: /home/nisla/data/fuel_map/processed2
 download_url: null
