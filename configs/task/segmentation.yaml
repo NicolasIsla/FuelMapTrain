@@ -11,10 +11,10 @@ trainer:
   criterion: null
 
   # params to adapt
-  n_epochs: 40
+  n_epochs: 80
   precision: fp32
   ckpt_interval: 1000
-  eval_interval: 5
+  eval_interval: 1
   log_interval: 10
   best_metric_key: mIoU
   use_wandb: ${use_wandb}
