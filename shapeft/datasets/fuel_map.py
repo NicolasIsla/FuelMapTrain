@@ -140,10 +140,18 @@ class FuelMap(RawGeoFMDataset):
         line = self.meta_patch.iloc[i]
         id_patch = self.id_patches[i]
         name = line["id"]
+        if self.obj == "class":
+            target = torch.from_numpy(
+                np.load(os.path.join(self.root_path, f"ANNOTATIONS_{self.obj}", f"{name}.npy"))
+            )
+        else:
+            target_combustible_disponible = np.load(os.path.join(self.root_path, f"ANNOTATIONS_combustible_disponible", f"{name}.npy"))
+            target_poder_calorico = np.load(os.path.join(self.root_path, f"ANNOTATIONS_poder_calorico", f"{name}.npy"))
+            target_resistencia_control = np.load(os.path.join(self.root_path, f"ANNOTATIONS_resistencia_control", f"{name}.npy"))
+            target = torch.stack([torch.from_numpy(target_combustible_disponible),
+                                    torch.from_numpy(target_poder_calorico),
+                                    torch.from_numpy(target_resistencia_control)], dim=0)
 
-        target = torch.from_numpy(
-            np.load(os.path.join(self.root_path, f"ANNOTATIONS_{self.obj}", f"{name}.npy"))
-        )
 
         data = {}
         metadata = None  # será un tensor 1D con las fechas de S2 seleccionadas
@@ -198,7 +206,14 @@ class FuelMap(RawGeoFMDataset):
             }
         else:
             return {
-                "image": data,
+                "image": {
+                    "optical": data["S2"],
+                    "sar_asc": data["S1_asc"],
+                    "sar_desc": data["S1_des"],
+                    "elevation": data["elevation"],
+                    "mTPI": data["mTPI"],
+                    "landforms": data["landforms"]
+                },
                 "target": target.to(torch.float32),
                 "metadata": metadata
             }
