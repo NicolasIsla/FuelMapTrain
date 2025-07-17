@@ -407,6 +407,11 @@ class RegEvaluator(Evaluator):
 
         self.log_metrics(metrics)
         return metrics, time.time() - start_time
+    @torch.no_grad()
+    def __call__(self, model, model_name=None, model_ckpt_path=None):
+        if model_name is None:
+            model_name = "model"
+        return self.evaluate(model, model_name, model_ckpt_path)
 
     def log_metrics(self, metrics):
         self.logger.info(f"MAE Banda 1: {metrics['mae_band1']:.6f}")
