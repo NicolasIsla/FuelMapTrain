@@ -397,14 +397,16 @@ class RegEvaluator(Evaluator):
             mse = torch.mean(diff ** 2).item()
             mae_channels.append(mae)
             mse_channels.append(mse)
-
+# ANNOTATIONS_combustible_disponible", f"{name}.npy"))
+#             target_poder_calorico = np.load(os.path.join(self.root_path, f"ANNOTATIONS_poder_calorico", f"{name}.npy"))
+#             target_resistencia_control = np.load(os.path.join(self.root_path, f"ANNOTATIONS_resistencia_control", f"{name}.npy"))
         metrics = {
-            "mae_band1": mae_channels[0],
-            "mae_band2": mae_channels[1],
-            "mae_band3": mae_channels[2],
-            "mse_band1": mse_channels[0],
-            "mse_band2": mse_channels[1],
-            "mse_band3": mse_channels[2],
+            "mae_combustible_disponible": mae_channels[0],
+            "mae_poder_calorico": mae_channels[1],
+            "mae_resistencia_control": mae_channels[2],
+            "mse_combustible_disponible": mse_channels[0],
+            "mse_poder_calorico": mse_channels[1],
+            "mse_resistencia_control": mse_channels[2],
             "mae_mean": sum(mae_channels) / 3,
             "mse_mean": sum(mse_channels) / 3,
         }
@@ -418,23 +420,23 @@ class RegEvaluator(Evaluator):
         return self.evaluate(model, model_name, model_ckpt_path)
 
     def log_metrics(self, metrics):
-        self.logger.info(f"MAE Banda 1: {metrics['mae_band1']:.6f}")
-        self.logger.info(f"MAE Banda 2: {metrics['mae_band2']:.6f}")
-        self.logger.info(f"MAE Banda 3: {metrics['mae_band3']:.6f}")
-        self.logger.info(f"MSE Banda 1: {metrics['mse_band1']:.6f}")
-        self.logger.info(f"MSE Banda 2: {metrics['mse_band2']:.6f}")
-        self.logger.info(f"MSE Banda 3: {metrics['mse_band3']:.6f}")
+        self.logger.info(f"MAE Combustible Disponible: {metrics['mae_combustible_disponible']:.6f}")
+        self.logger.info(f"MAE Poder Calorico: {metrics['mae_poder_calorico']:.6f}")
+        self.logger.info(f"MAE Resistencia Control: {metrics['mae_resistencia_control']:.6f}")
+        self.logger.info(f"MSE Combustible Disponible: {metrics['mse_combustible_disponible']:.6f}")
+        self.logger.info(f"MSE Poder Calorico: {metrics['mse_poder_calorico']:.6f}")
+        self.logger.info(f"MSE Resistencia Control: {metrics['mse_resistencia_control']:.6f}")
         self.logger.info(f"MAE Medio:   {metrics['mae_mean']:.6f}")
         self.logger.info(f"MSE Medio:   {metrics['mse_mean']:.6f}")
 
         if self.use_wandb and self.rank == 0:
             wandb.log({
-                f"{self.split}_MAE_band1": metrics["mae_band1"],
-                f"{self.split}_MAE_band2": metrics["mae_band2"],
-                f"{self.split}_MAE_band3": metrics["mae_band3"],
-                f"{self.split}_MSE_band1": metrics["mse_band1"],
-                f"{self.split}_MSE_band2": metrics["mse_band2"],
-                f"{self.split}_MSE_band3": metrics["mse_band3"],
+                f"{self.split}mae_combustible_disponible": metrics["mae_combustible_disponible"],
+                f"{self.split}mae_poder_calorico": metrics["mae_poder_calorico"],
+                f"{self.split}mae_resistencia_control": metrics["mae_resistencia_control"],
+                f"{self.split}mse_combustible_disponible": metrics["mse_combustible_disponible"],
+                f"{self.split}mse_poder_calorico": metrics["mse_poder_calorico"],
+                f"{self.split}mse_resistencia_control": metrics["mse_resistencia_control"],
                 f"{self.split}_MAE_mean": metrics["mae_mean"],
                 f"{self.split}_MSE_mean": metrics["mse_mean"],
             })
