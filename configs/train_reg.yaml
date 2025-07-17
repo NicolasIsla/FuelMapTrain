@@ -31,7 +31,7 @@ defaults:
   - encoder: ???
   - decoder: ???
   - preprocessing: ???
-  - criterion: mean_squared_error
+  - criterion: mse
   - lr_scheduler: multi_step_lr
   - optimizer: adamw
   - _self_ 
