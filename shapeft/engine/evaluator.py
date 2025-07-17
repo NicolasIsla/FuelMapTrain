@@ -372,10 +372,9 @@ class RegEvaluator(Evaluator):
 
             if self.inference_mode == "sliding":
                 input_size = model.module.encoder.input_size
-                logits = self.sliding_inference(model, image, input_size, output_shape=target.shape[-2:],
-                                                batch_positions=batch["metadata"])
+                logits = model(image,  batch_positions=batch["metadata"])
             elif self.inference_mode == "whole":
-                logits = model(image)
+                logits = model(image,  batch_positions=batch["metadata"])
             else:
                 raise NotImplementedError(f"Inference mode {self.inference_mode} not implemented.")
 
