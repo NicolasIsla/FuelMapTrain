@@ -34,17 +34,17 @@ class BasePreprocessor:
                 raise AssertionError(
                     f"Image dimension must be 4 (C, T, H, W), Got {str(len(v.shape))}"
                 )
-        if self.task == "regression":
-            if len(data["target"].shape) != 3:
-                raise AssertionError(
-                    f"Target dimension must be 2 (H, W), Got {str(len(data['target'].shape))}"
-                )
+        # if self.task == "regression":
+        #     if len(data["target"].shape) != 3:
+        #         raise AssertionError(
+        #             f"Target dimension must be 2 (H, W), Got {str(len(data['target'].shape))}"
+        #         )
 
-        else:
-            if len(data["target"].shape) != 2:
-                raise AssertionError(
-                    f"Target dimension must be 2 (H, W), Got {str(len(data['target'].shape))}"
-                )
+        # else:
+        #     if len(data["target"].shape) != 2:
+        #         raise AssertionError(
+        #             f"Target dimension must be 2 (H, W), Got {str(len(data['target'].shape))}"
+        #         )
 
     def check_size(self, data: dict[str, torch.Tensor | dict[str, torch.Tensor]]):
         """check if data size is equal"""
