@@ -77,7 +77,7 @@ class UTAE(Decoder):
         self.out_conv = ConvBlock(nkernels=[self.dec_topology[0]] + [self.dec_topology[0], self.num_classes], padding_mode="reflect")
 
 
-    def forward(self, x, batch_positions=None, return_att=False):
+    def forward(self, x, batch_positions=None, return_att=False, output_shape=None):
         input = x["optical"].permute(0,2,1,3,4)
         pad_mask = (
             (input == self.pad_value).all(dim=-1).all(dim=-1).all(dim=-1)
