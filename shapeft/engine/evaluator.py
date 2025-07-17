@@ -10,6 +10,10 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+import numpy as np
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from .evaluator import Evaluator  # Ajusta si el Evaluator base está en otro path
+
 
 class Evaluator:
     """
@@ -334,3 +338,96 @@ class SegEvaluator(Evaluator):
                 }
             )
 
+
+
+class RegEvaluator(Evaluator):
+    def __init__(
+        self,
+        val_loader,
+        exp_dir,
+        device,
+        inference_mode="sliding",
+        sliding_inference_batch=None,
+        use_wandb=False,
+        dataset_name="regression_dataset"
+    ):
+        super().__init__(val_loader, exp_dir, device, inference_mode, sliding_inference_batch, use_wandb, dataset_name)
+
+    @torch.no_grad()
+    def evaluate(self, model, model_name="model", model_ckpt_path=None):
+        start_time = time.time()
+
+        if model_ckpt_path is not None:
+            model_dict = torch.load(model_ckpt_path, map_location=self.device)
+            model.module.load_state_dict(model_dict["model"] if "model" in model_dict else model_dict)
+            self.logger.info(f"Loaded {model_name} for evaluation")
+
+        model.eval()
+
+        y_true_all = []
+        y_pred_all = []
+
+        for batch in tqdm(self.val_loader, desc="Evaluating"):
+            image, target = batch["image"], batch["target"]  # target: (B, 3, 256, 256)
+            image = {k: v.to(self.device) for k, v in image.items()}
+            target = target.to(self.device)
+
+            if self.inference_mode == "sliding":
+                input_size = model.module.encoder.input_size
+                logits = self.sliding_inference(model, image, input_size, output_shape=target.shape[-2:])
+            elif self.inference_mode == "whole":
+                logits = model(image)
+            else:
+                raise NotImplementedError(f"Inference mode {self.inference_mode} not implemented.")
+
+            y_true_all.append(target)
+            y_pred_all.append(logits)
+
+        y_true_all = torch.cat(y_true_all, dim=0)  # (N, 3, H, W)
+        y_pred_all = torch.cat(y_pred_all, dim=0)
+
+        # Calcular MAE y MSE por canal
+        mae_channels = []
+        mse_channels = []
+        for c in range(y_true_all.shape[1]):
+            diff = y_pred_all[:, c] - y_true_all[:, c]
+            mae = torch.mean(torch.abs(diff)).item()
+            mse = torch.mean(diff ** 2).item()
+            mae_channels.append(mae)
+            mse_channels.append(mse)
+
+        metrics = {
+            "mae_band1": mae_channels[0],
+            "mae_band2": mae_channels[1],
+            "mae_band3": mae_channels[2],
+            "mse_band1": mse_channels[0],
+            "mse_band2": mse_channels[1],
+            "mse_band3": mse_channels[2],
+            "mae_mean": sum(mae_channels) / 3,
+            "mse_mean": sum(mse_channels) / 3,
+        }
+
+        self.log_metrics(metrics)
+        return metrics, time.time() - start_time
+
+    def log_metrics(self, metrics):
+        self.logger.info(f"MAE Banda 1: {metrics['mae_band1']:.6f}")
+        self.logger.info(f"MAE Banda 2: {metrics['mae_band2']:.6f}")
+        self.logger.info(f"MAE Banda 3: {metrics['mae_band3']:.6f}")
+        self.logger.info(f"MSE Banda 1: {metrics['mse_band1']:.6f}")
+        self.logger.info(f"MSE Banda 2: {metrics['mse_band2']:.6f}")
+        self.logger.info(f"MSE Banda 3: {metrics['mse_band3']:.6f}")
+        self.logger.info(f"MAE Medio:   {metrics['mae_mean']:.6f}")
+        self.logger.info(f"MSE Medio:   {metrics['mse_mean']:.6f}")
+
+        if self.use_wandb and self.rank == 0:
+            wandb.log({
+                f"{self.split}_MAE_band1": metrics["mae_band1"],
+                f"{self.split}_MAE_band2": metrics["mae_band2"],
+                f"{self.split}_MAE_band3": metrics["mae_band3"],
+                f"{self.split}_MSE_band1": metrics["mse_band1"],
+                f"{self.split}_MSE_band2": metrics["mse_band2"],
+                f"{self.split}_MSE_band3": metrics["mse_band3"],
+                f"{self.split}_MAE_mean": metrics["mae_mean"],
+                f"{self.split}_MSE_mean": metrics["mse_mean"],
+            })

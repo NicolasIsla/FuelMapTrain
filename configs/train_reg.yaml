@@ -19,19 +19,19 @@ ft_rate: 1.0
 ckpt_dir: null
 limited_label_train: 1
 limited_label_val: 1
-limited_label_strategy: stratified  # Options: stratified, oversampled, random
+limited_label_strategy: random  # Options: stratified, oversampled, random
 stratification_bins: 3 #  number of bins for stratified sampling, only for stratified
 data_replicate: 1
 use_final_ckpt: false
 
 
 defaults:
-  - task: segmentation
+  - task: regression
   - dataset: fuel_map
   - encoder: ???
   - decoder: ???
   - preprocessing: ???
-  - criterion: cross_entropy
+  - criterion: mean_squared_error
   - lr_scheduler: multi_step_lr
   - optimizer: adamw
   - _self_ 

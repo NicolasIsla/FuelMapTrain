@@ -13,6 +13,7 @@ from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from shapeft.utils.logger import RunningAverageMeter, sec_to_hm
 
+
 class Trainer:
     def __init__(
         self,
@@ -487,3 +488,78 @@ class SegTrainer(Trainer):
         self.training_metrics["mAcc"].update(macc.item())
         self.training_metrics["mIoU"].update(miou.item())
 
+
+
+
+
+class RegTrainer(Trainer):
+    def __init__(
+        self,
+        model: nn.Module,
+        train_loader: DataLoader,
+        criterion: nn.Module,
+        optimizer: Optimizer,
+        lr_scheduler: LRScheduler,
+        evaluator: torch.nn.Module,
+        n_epochs: int,
+        exp_dir: pathlib.Path | str,
+        device: torch.device,
+        precision: str,
+        use_wandb: bool,
+        ckpt_interval: int,
+        eval_interval: int,
+        log_interval: int,
+        best_metric_key: str,
+    ):
+        super().__init__(
+            model=model,
+            train_loader=train_loader,
+            criterion=criterion,
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            evaluator=evaluator,
+            n_epochs=n_epochs,
+            exp_dir=exp_dir,
+            device=device,
+            precision=precision,
+            use_wandb=use_wandb,
+            ckpt_interval=ckpt_interval,
+            eval_interval=eval_interval,
+            log_interval=log_interval,
+            best_metric_key=best_metric_key,
+        )
+
+        self.training_metrics = {
+            name: RunningAverageMeter(length=100)
+            for name in ["mae_band1", "mae_band2", "mae_band3", "mae_mean",
+                         "mse_band1", "mse_band2", "mse_band3", "mse_mean"]
+        }
+        self.best_metric = float("inf")
+        self.best_metric_comp = operator.lt  # menor es mejor
+
+    def compute_loss(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        return self.criterion(logits, target)
+
+    @torch.no_grad()
+    def compute_logging_metrics(self, logits: torch.Tensor, target: torch.Tensor) -> None:
+        y_pred = logits.detach()
+        y_true = target.detach()
+
+        mae_bands = []
+        mse_bands = []
+
+        for i in range(y_pred.shape[1]):  # loop over bands (3)
+            diff = y_pred[:, i] - y_true[:, i]
+            mae = torch.mean(torch.abs(diff)).item()
+            mse = torch.mean(diff ** 2).item()
+            mae_bands.append(mae)
+            mse_bands.append(mse)
+
+        mae_mean = sum(mae_bands) / len(mae_bands)
+        mse_mean = sum(mse_bands) / len(mse_bands)
+
+        for i in range(3):
+            self.training_metrics[f"mae_band{i+1}"].update(mae_bands[i])
+            self.training_metrics[f"mse_band{i+1}"].update(mse_bands[i])
+        self.training_metrics["mae_mean"].update(mae_mean)
+        self.training_metrics["mse_mean"].update(mse_mean)
