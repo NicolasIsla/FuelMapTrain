@@ -8,7 +8,7 @@ img_size: 128
 multi_temporal: 69
 multi_modal: True
 #limited_label: False
-obj: class
+obj: regression
 
 # classes
 ignore_index: 0
