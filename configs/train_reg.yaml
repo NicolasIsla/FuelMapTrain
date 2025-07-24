@@ -3,7 +3,7 @@ work_dir: ""
 seed: 234
 use_wandb: true
 wandb_run_id: null
-wandb_project: "FuelMapRegression"
+wandb_project: "FuelRegression"
 
 # TRAINING
 num_workers: 4
@@ -27,7 +27,7 @@ use_final_ckpt: false
 
 defaults:
   - task: regression
-  - dataset: fuel_map
+  - dataset: fuel_map_reg
   - encoder: ???
   - decoder: ???
   - preprocessing: ???

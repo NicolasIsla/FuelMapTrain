@@ -286,6 +286,7 @@ def main(cfg: DictConfig) -> None:
             collate_fn=collate_fn,
         )
 
+
         val_loader = DataLoader(
             val_dataset,
             sampler=DistributedSampler(val_dataset),
@@ -345,7 +346,7 @@ def main(cfg: DictConfig) -> None:
         _recursive_=False,
     )
     # get datasets
-    raw_test_dataset: RawGeoFMDataset = instantiate(cfg.dataset, split="test")
+    raw_test_dataset: RawGeoFMDataset = instantiate(cfg.dataset, split="test",)
     test_dataset = GeoFMDataset(raw_test_dataset, test_preprocessor)
 
     test_loader = DataLoader(

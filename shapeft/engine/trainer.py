@@ -138,6 +138,9 @@ class Trainer:
         end_time = time.time()
         for batch_idx, data in enumerate(self.train_loader):
             image, target = data["image"], data["target"]
+
+
+    
             image = {modality: value.to(self.device) for modality, value in image.items()}
             target = target.to(self.device)
 
@@ -150,6 +153,8 @@ class Trainer:
                     logits = self.model(image, output_shape=target.shape[-2:])
                 else: 
                     logits = self.model(image, batch_positions=data["metadata"])
+
+                
                 loss = self.compute_loss(logits, target)
 
             self.optimizer.zero_grad()
@@ -491,7 +496,6 @@ class SegTrainer(Trainer):
 
 
 
-
 class RegTrainer(Trainer):
     def __init__(
         self,
@@ -529,16 +533,22 @@ class RegTrainer(Trainer):
             best_metric_key=best_metric_key,
         )
 
+        self.attr_names = ["combustible_disponible", "poder_calorico", "resistencia_control", "velocidad_propagacion"]
         self.training_metrics = {
             name: RunningAverageMeter(length=100)
-            for name in ["mae_band1", "mae_band2", "mae_band3", "mae_mean",
-                         "mse_band1", "mse_band2", "mse_band3", "mse_mean"]
+            for metric in ["mae", "mse"]
+            for name in [f"{metric}_{attr}" for attr in self.attr_names] + [f"{metric}_mean"]
         }
+
         self.best_metric = float("inf")
         self.best_metric_comp = operator.lt  # menor es mejor
 
-    def compute_loss(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        return self.criterion(logits, target)
+    def compute_loss(self, logits, target):
+
+        # calcula la pérdida para cada pixel
+        loss_map = self.criterion(logits, target)
+
+        return loss_map
 
     @torch.no_grad()
     def compute_logging_metrics(self, logits: torch.Tensor, target: torch.Tensor) -> None:
@@ -548,18 +558,25 @@ class RegTrainer(Trainer):
         mae_bands = []
         mse_bands = []
 
-        for i in range(y_pred.shape[1]):  # loop over bands (3)
-            diff = y_pred[:, i] - y_true[:, i]
-            mae = torch.mean(torch.abs(diff)).item()
-            mse = torch.mean(diff ** 2).item()
+        for i in range(y_pred.shape[1]):
+            pred_band = y_pred[:, i]
+            true_band = y_true[:, i]
+
+            diff = pred_band - true_band
+            if diff.numel() == 0:
+                mae, mse = 0.0, 0.0
+            else:
+                mae = torch.mean(torch.abs(diff)).item()
+                mse = torch.mean(diff ** 2).item()
+
             mae_bands.append(mae)
             mse_bands.append(mse)
 
         mae_mean = sum(mae_bands) / len(mae_bands)
         mse_mean = sum(mse_bands) / len(mse_bands)
 
-        for i in range(3):
-            self.training_metrics[f"mae_band{i+1}"].update(mae_bands[i])
-            self.training_metrics[f"mse_band{i+1}"].update(mse_bands[i])
+        for i, attr in enumerate(self.attr_names):
+            self.training_metrics[f"mae_{attr}"].update(mae_bands[i])
+            self.training_metrics[f"mse_{attr}"].update(mse_bands[i])
         self.training_metrics["mae_mean"].update(mae_mean)
         self.training_metrics["mse_mean"].update(mse_mean)

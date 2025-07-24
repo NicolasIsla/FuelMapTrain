@@ -46,7 +46,7 @@ class FuelMap(RawGeoFMDataset):
         auto_download: bool,
         reference_date: str = "2020-09-01", 
         cover=0,
-        obj="class"
+        obj = "regressión"  # "class", "combustible_disponible", "poder_calorico", "resistencia_control", "velocidad_propagacion"
     ):
         super(FuelMap, self).__init__(
             split=split,
@@ -67,7 +67,6 @@ class FuelMap(RawGeoFMDataset):
             download_url=download_url,
             auto_download=auto_download
         )
-
         print("Reading patch metadata...")
         self.obj = obj
         self.meta_patch = gpd.read_file(os.path.join(root_path, "metadata.geojson"))
@@ -140,17 +139,16 @@ class FuelMap(RawGeoFMDataset):
         line = self.meta_patch.iloc[i]
         id_patch = self.id_patches[i]
         name = line["id"]
-        if self.obj == "class":
-            target = torch.from_numpy(
-                np.load(os.path.join(self.root_path, f"ANNOTATIONS_{self.obj}", f"{name}.npy"))
-            )
-        else:
-            target_combustible_disponible = np.load(os.path.join(self.root_path, f"ANNOTATIONS_combustible_disponible", f"{name}.npy"))
-            target_poder_calorico = np.load(os.path.join(self.root_path, f"ANNOTATIONS_poder_calorico", f"{name}.npy"))
-            target_resistencia_control = np.load(os.path.join(self.root_path, f"ANNOTATIONS_resistencia_control", f"{name}.npy"))
-            target = torch.stack([torch.from_numpy(target_combustible_disponible),
-                                    torch.from_numpy(target_poder_calorico),
-                                    torch.from_numpy(target_resistencia_control)], dim=0)
+        
+        target_combustible_disponible = np.load(os.path.join(self.root_path, f"ANNOTATIONS_combustible_disponible", f"{name}.npy"))
+        target_poder_calorico = np.load(os.path.join(self.root_path, f"ANNOTATIONS_poder_calorico", f"{name}.npy"))
+        target_resistencia_control = np.load(os.path.join(self.root_path, f"ANNOTATIONS_resistencia_control", f"{name}.npy"))
+        target_velocidad_propagacion = np.load(os.path.join(self.root_path, f"ANNOTATIONS_velocidad_propagacion", f"{name}.npy"))
+        target = torch.stack([torch.from_numpy(target_combustible_disponible),
+                                torch.from_numpy(target_poder_calorico),
+                                torch.from_numpy(target_resistencia_control),
+                                torch.from_numpy(target_velocidad_propagacion)], dim=0)
+        mask = torch.from_numpy(np.load(os.path.join(self.root_path, f"ANNOTATIONS_masked", f"{name}_masked.npy")))
 
 
         data = {}
@@ -191,31 +189,19 @@ class FuelMap(RawGeoFMDataset):
                 raise ValueError(f"Unsupported array shape {array.shape} for modality {modality}")
             data[modality] = tensor
 
-        if self.obj == "class":
-            return {
-                "image": {
-                    "optical": data["S2"],
-                    "sar_asc": data["S1_asc"],
-                    "sar_desc": data["S1_des"],
-                    "elevation": data["elevation"],
-                    "mTPI": data["mTPI"],
-                    "landforms": data["landforms"]
-                },
-                "target": target.to(torch.int64),
-                "metadata": metadata  # solo fechas de S2
-            }
-        else:
-            return {
-                "image": {
-                    "optical": data["S2"],
-                    "sar_asc": data["S1_asc"],
-                    "sar_desc": data["S1_des"],
-                    "elevation": data["elevation"],
-                    "mTPI": data["mTPI"],
-                    "landforms": data["landforms"]
-                },
-                "target": target.to(torch.float32),
-                "metadata": metadata
+        return {
+            "image": {
+                "optical": data["S2"],
+                "sar_asc": data["S1_asc"],
+                "sar_desc": data["S1_des"],
+                "elevation": data["elevation"],
+                "mTPI": data["mTPI"],
+                "landforms": data["landforms"],
+            },
+            "target": target.to(torch.float32),
+            "metadata": metadata,
+            "mask": mask.to(torch.uint8)
+
             }
     @staticmethod
     def download():

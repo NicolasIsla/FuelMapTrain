@@ -370,15 +370,21 @@ class RegEvaluator(Evaluator):
         y_pred_all = []
 
         for batch in tqdm(self.val_loader, desc="Evaluating"):
-            image, target = batch["image"], batch["target"]  # target: (B, 3, 256, 256)
+            # image, target = batch["image"], batch["target"]  # target: (B, 3, 256, 256)
+            image, target = batch["image"], batch["target"]
+
+            metadata = batch["metadata"]  # metadata: (B, 1) with dates
+            # quitar mask de image
+
             image = {k: v.to(self.device) for k, v in image.items()}
             target = target.to(self.device)
+            
 
             if self.inference_mode == "sliding":
                 input_size = model.module.encoder.input_size
-                logits = model(image,  batch_positions=batch["metadata"])
+                logits = model(image,  batch_positions=metadata)
             elif self.inference_mode == "whole":
-                logits = model(image,  batch_positions=batch["metadata"])
+                logits = model(image,  batch_positions=metadata)
             else:
                 raise NotImplementedError(f"Inference mode {self.inference_mode} not implemented.")
 
@@ -404,11 +410,13 @@ class RegEvaluator(Evaluator):
             "mae_combustible_disponible": mae_channels[0],
             "mae_poder_calorico": mae_channels[1],
             "mae_resistencia_control": mae_channels[2],
+            "mae_velocidad_propagacion": mae_channels[3],
             "mse_combustible_disponible": mse_channels[0],
             "mse_poder_calorico": mse_channels[1],
             "mse_resistencia_control": mse_channels[2],
-            "mae_mean": sum(mae_channels) / 3,
-            "mse_mean": sum(mse_channels) / 3,
+            "mse_velocidad_propagacion": mse_channels[3],
+            "mae_mean": sum(mae_channels) / 4,
+            "mse_mean": sum(mse_channels) / 4,
         }
 
         self.log_metrics(metrics)
@@ -423,9 +431,11 @@ class RegEvaluator(Evaluator):
         self.logger.info(f"MAE Combustible Disponible: {metrics['mae_combustible_disponible']:.6f}")
         self.logger.info(f"MAE Poder Calorico: {metrics['mae_poder_calorico']:.6f}")
         self.logger.info(f"MAE Resistencia Control: {metrics['mae_resistencia_control']:.6f}")
+        self.logger.info(f"MAE Velocidad Propagacion: {metrics['mae_velocidad_propagacion']:.6f}")
         self.logger.info(f"MSE Combustible Disponible: {metrics['mse_combustible_disponible']:.6f}")
         self.logger.info(f"MSE Poder Calorico: {metrics['mse_poder_calorico']:.6f}")
         self.logger.info(f"MSE Resistencia Control: {metrics['mse_resistencia_control']:.6f}")
+        self.logger.info(f"MSE Velocidad Propagacion: {metrics['mse_velocidad_propagacion']:.6f}")
         self.logger.info(f"MAE Medio:   {metrics['mae_mean']:.6f}")
         self.logger.info(f"MSE Medio:   {metrics['mse_mean']:.6f}")
 
@@ -434,9 +444,11 @@ class RegEvaluator(Evaluator):
                 f"{self.split}mae_combustible_disponible": metrics["mae_combustible_disponible"],
                 f"{self.split}mae_poder_calorico": metrics["mae_poder_calorico"],
                 f"{self.split}mae_resistencia_control": metrics["mae_resistencia_control"],
+                f"{self.split}mae_velocidad_propagacion": metrics["mae_velocidad_propagacion"],
                 f"{self.split}mse_combustible_disponible": metrics["mse_combustible_disponible"],
                 f"{self.split}mse_poder_calorico": metrics["mse_poder_calorico"],
                 f"{self.split}mse_resistencia_control": metrics["mse_resistencia_control"],
+                f"{self.split}mse_velocidad_propagacion": metrics["mse_velocidad_propagacion"],
                 f"{self.split}_MAE_mean": metrics["mae_mean"],
                 f"{self.split}_MSE_mean": metrics["mse_mean"],
             })

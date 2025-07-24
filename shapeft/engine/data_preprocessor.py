@@ -30,7 +30,7 @@ class BasePreprocessor:
         """check dimension (C, T, H, W) of data"""
         target = data["target"]
         for k, v in data["image"].items():
-            if len(v.shape) != 4:
+            if len(v.shape) != 4 and k!="mask":
                 raise AssertionError(
                     f"Image dimension must be 4 (C, T, H, W), Got {str(len(v.shape))}"
                 )
@@ -51,7 +51,7 @@ class BasePreprocessor:
         base_shape = data["image"][list(data["image"].keys())[0]].shape
 
         for k, v in data["image"].items():
-            if v.shape[1:] != base_shape[1:]:
+            if v.shape[1:] != base_shape[1:] and k != "mask":
                 shape = {k: tuple(v.shape[1:]) for k, v in data["image"].items()}
                 raise AssertionError(
                     f"Image size (T, H, W) from all modalities must be equal, Got {str(shape)}"
@@ -466,7 +466,9 @@ class RandomCrop(BasePreprocessor):
         if height < self.size[0] or width < self.size[1]:
             pad_img = max(self.size[0] - height, 0), max(self.size[1] - width, 0)
             height, width = height + 2 * pad_img[0], width + 2 * pad_img[1]
-            for k, v in data["image"].items():
+            for k, v in data["image"].items() :
+                if k == "mask":
+                    continue
                 padded_img = (
                     self.pad_value[k].reshape(-1, 1, 1, 1).repeat(1, t, height, width)
                 )
@@ -507,6 +509,8 @@ class RandomCrop(BasePreprocessor):
         i, j, h, w = self.get_params(data=data)
 
         for k, v in data["image"].items():
+            if k == "mask":
+                continue
             data["image"][k] = TF.crop(v, i, j, h, w)
 
         data["target"] = TF.crop(data["target"], i, j, h, w)
@@ -649,6 +653,8 @@ class ImportanceRandomCrop(RandomCrop):
         i, j, h, w = crop_candidates[crop_idx]
 
         for k, v in data["image"].items():
+            if k == "mask":
+                continue
             data["image"][k] = TF.crop(v, i, j, h, w)
 
         data["target"] = TF.crop(data["target"], i, j, h, w)
@@ -711,6 +717,8 @@ class CenterCrop(BasePreprocessor):
             pad_img = max(self.size[0] - height, 0), max(self.size[1] - width, 0)
             height, width = height + 2 * pad_img[0], width + 2 * pad_img[1]
             for k, v in data["image"].items():
+                if k == "mask":
+                    continue
                 padded_img = (
                     self.pad_value[k].reshape(-1, 1, 1, 1).repeat(1, t, height, width)
                 )
@@ -737,6 +745,8 @@ class CenterCrop(BasePreprocessor):
         i, j, h, w = self.get_params(data=data)
 
         for k, v in data["image"].items():
+            if k == "mask":
+                continue
             data["image"][k] = TF.crop(v, i, j, h, w)
 
         data["target"] = TF.crop(data["target"], i, j, h, w)
@@ -808,6 +818,8 @@ class Resize(BasePreprocessor):
              "metadata": dict}.
         """
         for k, v in data["image"].items():
+            if k == "mask":
+                continue
             data["image"][k] = TF.resize(
                 data["image"][k],
                 self.size,
@@ -960,6 +972,8 @@ class RandomResizedCrop(BasePreprocessor):
         i, j, h, w = self.get_params((h_img, w_img), self.scale, self.ratio)
 
         for k, v in data["image"].items():
+            if k == "mask":
+                continue
             data["image"][k] = TF.resized_crop(
                 data["image"][k],
                 i,

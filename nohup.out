@@ -1,0 +1,285 @@
+Traceback (most recent call last):
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/run.py", line 892, in main
+    run(args)
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/run.py", line 883, in run
+    elastic_launch(
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 139, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 261, in launch_agent
+    result = agent.run()
+             ^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/metrics/api.py", line 138, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 711, in run
+    result = self._invoke_run(role)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 864, in _invoke_run
+    self._initialize_workers(self._worker_group)
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/metrics/api.py", line 138, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 683, in _initialize_workers
+    self._rendezvous(worker_group)
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/metrics/api.py", line 138, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 500, in _rendezvous
+    rdzv_info = spec.rdzv_handler.next_rendezvous()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/static_tcp_rendezvous.py", line 67, in next_rendezvous
+    self._store = TCPStore(  # type: ignore[call-arg]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.distributed.DistNetworkError: The server socket has failed to listen on any local network address. port: 29500, useIpv6: false, code: -98, name: EADDRINUSE, message: address already in use
+Available GPUs: 2
+GPU 0: NVIDIA GeForce RTX 2080
+GPU 1: NVIDIA GeForce RTX 2080
+[2025-07-03 01:58:54,519][HYDRA] Launching 20 jobs locally
+[2025-07-03 01:58:54,519][HYDRA] 	#0 : dataset=fuel_map dataset.multi_temporal=1 encoder=croma_optical decoder=seg_upernet_mt_ltae preprocessing=seg_default criterion=cross_entropy optimizer.lr=0.001 finetune=False from_scratch=False work_dir=/home/nisla/FuelMapTrain/results limited_label_train=0.01
+/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/distributed_c10d.py:4631: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+INFO - 07/03/25 01:58:55 - 0:00:00 - ============ Initialized logger ============
+INFO - 07/03/25 01:58:55 - 0:00:00 - 'batch_size': 8,
+                                      'ckpt_dir': None,
+                                      'criterion': {'_target_': 'torch.nn.CrossEntropyLoss',
+                                                    'ignore_index': '${dataset.ignore_index}'},
+                                      'data_replicate': 1,
+                                      'dataset': {'_target_': 'shapeft.datasets.fuel_map.FuelMap',
+                                                  'auto_download': False,
+                                                  'bands': {'elevation': ['elevation'],
+                                                            'landforms': ['landforms'],
+                                                            'mTPI': ['mTPI'],
+                                                            'optical': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7',
+                                                                        'B8', 'B8A', 'B11', 'B12', 'B13'],
+                                                            'sar_asc': ['VV', 'VH'],
+                                                            'sar_desc': ['VV', 'VH']},
+                                                  'classes': ['Background', 'PL10', 'PL09', 'PL11', 'SV02', 'MT03',
+                                                              'PL08', 'PL05', 'PL04', 'PL02', 'SV01', 'PCH4', 'PCH2',
+                                                              'MT01', 'PCH1', 'PL01', 'SV03', 'MT02', 'DX02', 'BN05',
+                                                              'BN04', 'MT04', 'MT07', 'MT06', 'PL07', 'PCH5', 'PL03',
+                                                              'DX01', 'BN03', 'PL06', 'PCH3', 'BN01', 'MT08'],
+                                                  'data_max': {'elevation': [0.09689626842737198],
+                                                               'landforms': [0.16470588743686676],
+                                                               'mTPI': [1.3923272490501404e-07],
+                                                               'optical': [20978.0, 19592.0, 18312.0, 17352.0,
+                                                                           17023.0, 16857.0, 16702.0, 16504.0,
+                                                                           16427.0, 16458.0, 15325.0, 15186.0],
+                                                               'sar_asc': [817.8963623046875, 76.3246841430664],
+                                                               'sar_desc': [1125.4569091796875, 167.44996643066406]},
+                                                  'data_mean': {'elevation': [0.0113],
+                                                                'landforms': [0.1096],
+                                                                'mTPI': [-0.0086],
+                                                                'optical': [2303.2992, 2251.7293, 2278.8316,
+                                                                            2253.5023, 2557.0465, 3125.8736,
+                                                                            3322.8017, 3479.4525, 3445.7466,
+                                                                            4165.3234, 2241.5551, 1703.0405],
+                                                                'sar_asc': [0.1112, 0.0273],
+                                                                'sar_desc': [0.1074, 0.0259]},
+                                                  'data_min': {'elevation': [-0.0005493331700563431],
+                                                               'landforms': [0.0],
+                                                               'mTPI': [-1.0],
+                                                               'optical': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                                                           0.0, 0.0, 0.0, 0.0],
+                                                               'sar_asc': [0.0, 0.0],
+                                                               'sar_desc': [0.0, 0.0]},
+                                                  'data_std': {'elevation': [0.0137],
+                                                               'landforms': [0.0291],
+                                                               'mTPI': [0.092],
+                                                               'optical': [3209.456, 3052.9151, 2854.4335, 2800.0855,
+                                                                           2779.7003, 2415.3432, 2293.1068,
+                                                                           2327.9943, 2185.5189, 3503.2669,
+                                                                           1542.7544, 1380.4435],
+                                                               'sar_asc': [0.5352, 0.0699],
+                                                               'sar_desc': [0.3388, 0.0686]},
+                                                  'dataset_name': 'FuelMap',
+                                                  'distribution': [0.5846, 0.0167, 0.014, 0.0321, 0.0124, 0.0024,
+                                                                   0.0055, 0.0101, 0.0195, 0.0235, 0.0132, 0.002,
+                                                                   0.0125, 0.0061, 0.0024, 0.032, 0.0256, 0.0097,
+                                                                   0.0003, 0.0016, 0.0093, 0.0018, 0.0023, 0.0275,
+                                                                   0.0183, 0.0313, 0.0214, 0.0043, 0.0316, 0.0186,
+                                                                   0.006, 0.0003, 0.0011],
+                                                  'download_url': None,
+                                                  'ignore_index': 0,
+                                                  'img_size': 128,
+                                                  'multi_modal': True,
+                                                  'multi_temporal': 1,
+                                                  'num_classes': 33,
+                                                  'root_path': '/home/nisla/data/fuel_map/processed2'},
+                                      'decoder': {'_target_': 'shapeft.decoders.upernet.SegMTUPerNet',
+                                                  'channels': 512,
+                                                  'encoder': None,
+                                                  'finetune': '${finetune}',
+                                                  'multi_temporal': '${dataset.multi_temporal}',
+                                                  'multi_temporal_strategy': 'ltae',
+                                                  'num_classes': '${dataset.num_classes}'},
+                                      'encoder': {'_target_': 'shapeft.encoders.croma_encoder.CROMA_OPTICAL_Encoder',
+                                                  'download_url': 'https://huggingface.co/antofuller/CROMA/resolve/main/CROMA_large.pt',
+                                                  'encoder_weights': './pretrained_models/CROMA_large.pt',
+                                                  'input_bands': {'optical': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6',
+                                                                              'B7', 'B8', 'B8A', 'B9', 'B11',
+                                                                              'B12']},
+                                                  'input_size': 120,
+                                                  'output_dim': 1024,
+                                                  'output_layers': [3, 5, 7, 11],
+                                                  'size': 'large'},
+                                      'finetune': False,
+                                      'from_scratch': False,
+                                      'ft_rate': 1.0,
+                                      'limited_label_strategy': 'stratified',
+                                      'limited_label_train': 0.01,
+                                      'limited_label_val': 1,
+                                      'lr_scheduler': {'_target_': 'shapeft.utils.schedulers.MultiStepLR',
+                                                       'lr_milestones': [0.6, 0.9],
+                                                       'optimizer': None,
+                                                       'total_iters': None},
+                                      'num_workers': 4,
+                                      'optimizer': {'_partial_': True,
+                                                    '_target_': 'torch.optim.AdamW',
+                                                    'betas': [0.9, 0.999],
+                                                    'lr': 0.001,
+                                                    'weight_decay': 0.05},
+                                      'preprocessing': {'test': {'_target_': 'shapeft.engine.data_preprocessor.Preprocessor',
+                                                                 'preprocessor_cfg': [{'_target_': 'shapeft.engine.data_preprocessor.BandFilter'},
+                                                                                      {'_target_': 'shapeft.engine.data_preprocessor.NormalizeMeanStd'},
+                                                                                      {'_target_': 'shapeft.engine.data_preprocessor.BandPadding'}]},
+                                                        'train': {'_target_': 'shapeft.engine.data_preprocessor.Preprocessor',
+                                                                  'preprocessor_cfg': [{'_target_': 'shapeft.engine.data_preprocessor.RandomCropToEncoder'},
+                                                                                       {'_target_': 'shapeft.engine.data_preprocessor.BandFilter'},
+                                                                                       {'_target_': 'shapeft.engine.data_preprocessor.NormalizeMeanStd'},
+                                                                                       {'_target_': 'shapeft.engine.data_preprocessor.BandPadding'}]},
+                                                        'val': {'_target_': 'shapeft.engine.data_preprocessor.Preprocessor',
+                                                                'preprocessor_cfg': [{'_target_': 'shapeft.engine.data_preprocessor.BandFilter'},
+                                                                                     {'_target_': 'shapeft.engine.data_preprocessor.NormalizeMeanStd'},
+                                                                                     {'_target_': 'shapeft.engine.data_preprocessor.BandPadding'}]}},
+                                      'seed': 234,
+                                      'stratification_bins': 3,
+                                      'task': {'evaluator': {'_target_': 'shapeft.engine.evaluator.SegEvaluator',
+                                                             'device': None,
+                                                             'exp_dir': None,
+                                                             'inference_mode': 'sliding',
+                                                             'sliding_inference_batch': 8,
+                                                             'use_wandb': '${use_wandb}',
+                                                             'val_loader': None},
+                                               'trainer': {'_target_': 'shapeft.engine.trainer.SegTrainer',
+                                                           'best_metric_key': 'mIoU',
+                                                           'ckpt_interval': 1000,
+                                                           'criterion': None,
+                                                           'device': None,
+                                                           'eval_interval': 1,
+                                                           'evaluator': None,
+                                                           'exp_dir': None,
+                                                           'log_interval': 10,
+                                                           'lr_scheduler': None,
+                                                           'model': None,
+                                                           'n_epochs': 80,
+                                                           'optimizer': None,
+                                                           'precision': 'fp32',
+                                                           'train_loader': None,
+                                                           'use_wandb': '${use_wandb}'}},
+                                      'test_batch_size': 1,
+                                      'test_num_workers': 4,
+                                      'train': True,
+                                      'use_final_ckpt': False,
+                                      'use_wandb': False,
+                                      'wandb_project': 'ShapingFT',
+                                      'wandb_run_id': None,
+                                      'work_dir': '/home/nisla/FuelMapTrain/results'
+INFO - 07/03/25 01:58:55 - 0:00:00 - The experiment is stored in /home/nisla/FuelMapTrain/results/20250703_015854_961c17_croma_optical_seg_upernet_mt_ltae_fuel_map
+                                     
+INFO - 07/03/25 01:58:55 - 0:00:00 - Device used: cuda:0
+INFO - 07/03/25 01:59:06 - 0:00:11 - Built croma_optical from checkpoint.
+INFO - 07/03/25 01:59:06 - 0:00:12 - Built UPerNet for with CROMA_OPTICAL_Encoder encoder.
+Reading patch metadata...
+--- Logging error ---
+Traceback (most recent call last):
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 711, in run
+    result = self._invoke_run(role)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 870, in _invoke_run
+    time.sleep(monitor_interval)
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/multiprocessing/api.py", line 84, in _terminate_process_handler
+    raise SignalException(f"Process {os.getpid()} got signal: {sigval}", sigval=sigval)
+torch.distributed.elastic.multiprocessing.api.SignalException: Process 824768 got signal: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/logging/__init__.py", line 1110, in emit
+    msg = self.format(record)
+          ^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/logging/__init__.py", line 953, in format
+    return fmt.format(record)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/_logging/_internal.py", line 863, in format
+    filepath = make_module_path_relative(record.pathname)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/_logging/_internal.py", line 787, in make_module_path_relative
+    abs_path = pathlib.Path(abs_path).resolve()
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/pathlib.py", line 871, in __new__
+    self = cls._from_parts(args)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/pathlib.py", line 509, in _from_parts
+    drv, root, parts = self._parse_args(args)
+                       ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/pathlib.py", line 496, in _parse_args
+    parts.append(str(a))
+                 ^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/multiprocessing/api.py", line 84, in _terminate_process_handler
+    raise SignalException(f"Process {os.getpid()} got signal: {sigval}", sigval=sigval)
+torch.distributed.elastic.multiprocessing.api.SignalException: Process 824768 got signal: 1
+Call stack:
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/run.py", line 892, in main
+    run(args)
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/run.py", line 883, in run
+    elastic_launch(
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 139, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 261, in launch_agent
+    result = agent.run()
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/metrics/api.py", line 138, in wrapper
+    result = f(*args, **kwargs)
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 719, in run
+    logger.warning("Received %s death signal, shutting down workers", e.sigval)
+Message: 'Received %s death signal, shutting down workers'
+Arguments: (<Signals.SIGHUP: 1>,)
+W0703 01:59:22.822000 824768 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 824777 closing signal SIGHUP
+Traceback (most recent call last):
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/run.py", line 892, in main
+    run(args)
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/run.py", line 883, in run
+    elastic_launch(
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 139, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 261, in launch_agent
+    result = agent.run()
+             ^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/metrics/api.py", line 138, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 711, in run
+    result = self._invoke_run(role)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 870, in _invoke_run
+    time.sleep(monitor_interval)
+  File "/home/nisla/miniconda3/envs/FuelMapTrain/lib/python3.11/site-packages/torch/distributed/elastic/multiprocessing/api.py", line 84, in _terminate_process_handler
+    raise SignalException(f"Process {os.getpid()} got signal: {sigval}", sigval=sigval)
+torch.distributed.elastic.multiprocessing.api.SignalException: Process 824768 got signal: 1
